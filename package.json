@@ -1,0 +1,35 @@
+{
+  "name": "specjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "standardx --fix && tsc --noEmit && jest --coverage",
+    "test:watch": "jest --watch",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "25.1.4",
+    "@typescript-eslint/eslint-plugin": "2.25.0",
+    "@typescript-eslint/parser": "2.25.0",
+    "jest": "25.2.3",
+    "standardx": "5.0.0",
+    "ts-jest": "25.2.1",
+    "typescript": "3.8.3"
+  },
+  "eslintConfig": {
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "error"
+    }
+  },
+  "standardx": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ]
+  },
+  "dependencies": {}
+}
