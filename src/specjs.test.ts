@@ -1,6 +1,7 @@
 /* eslint-env jest */
 
-import { bindSpec } from "./specjs"
+import { bindSpec, BindClassSpec } from "./specjs"
+import { ClassContract } from "./specjs.types"
 
 
 type IToUpper = (str: string) => string
@@ -67,3 +68,51 @@ describe('when postcondition is set', () => {
     expect(() => WrongWithContract('')).toThrow('Postcondition fails')
   })
 })
+
+describe('when precondition is set to class constructor', () => {
+
+  const TestClassContract: ClassContract = {
+    construct(int: number) {
+      return int > 0
+    },
+
+    // invariant: {
+    //   data(value, old) {
+    //     console.log(value, old)
+    //     // return value !== old
+    //     return value > 0 && value < 10
+    //   }
+    // }
+
+    // rescue(error) {
+    //     console.log('SHit', error)
+    //     return 'DEFAULT'
+    // }
+  }
+
+  @BindClassSpec(TestClassContract)
+  class TestClass {
+    data: Number
+
+    constructor(val: number) {
+      this.data = val
+    }
+
+    setData(val: number) {
+      this.data = val
+    }
+  }
+
+  it('should init the class if condition is satisfied', () => {
+    const instance = new TestClass(1)
+    expect(instance).toBeDefined()
+    expect(instance.data).toBe(1)
+  })
+
+  it('should throw an error if condition is NOT satisfied', () => {
+    expect(() => {
+      const instance = new TestClass(0)
+    }).toThrow('Precondition on constructor fails')
+  })
+})
+

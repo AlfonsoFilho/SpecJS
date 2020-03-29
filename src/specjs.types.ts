@@ -7,8 +7,8 @@ export interface FunctionContract {
 export type Target = Function
 
 export interface ClassContract {
-  [field: string]: FunctionContract | undefined
-  construct?: FunctionContract;
+  [field: string]: FunctionContract | undefined | Function,
+  construct?: (...args: any[]) => Boolean,
   invariant?: {
     [prop: string]: (value: unknown, oldValue?: unknown) => boolean
   };

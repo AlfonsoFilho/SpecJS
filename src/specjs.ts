@@ -9,6 +9,16 @@ function isClass(contractType: FunctionContract | ClassContract): contractType i
 }
 
 /**
+ * Class Decorator
+ * @param contract
+ */
+export function BindClassSpec(contract: ClassContract) {
+  return (target: any) => {
+    return bindSpec<typeof target>(target, contract)
+  }
+}
+
+/**
  * Creates a new contract
  * @param target
  * @param spec
@@ -47,11 +57,8 @@ export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
      */
     construct(Target, args) {
       if (isClass(spec)) {
-        if (!spec?.construct?.pre?.apply(null, args)) {
+        if (!(spec?.construct?.apply(null, args) ?? true)) {
           throw Error('Precondition on constructor fails')
-        }
-        if (!(spec.construct?.post?.apply(null, args) ?? true)) {
-          throw Error('Postcondition on constructor fails')
         }
       }
 
