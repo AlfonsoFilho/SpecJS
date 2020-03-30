@@ -52,5 +52,5 @@
     ]
   },
   "dependencies": {},
-  "runkitExampleFilename": "examples/example.js"
+  "runkitExampleFilename": "examples/runkit.js"
 }
