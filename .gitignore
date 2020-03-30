@@ -137,3 +137,4 @@ temp/
 # End of https://www.gitignore.io/api/node,linux,visualstudiocode
 
 src/playground.ts
+.rts_cache_cjs/*
