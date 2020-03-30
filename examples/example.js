@@ -1,17 +1,17 @@
-let SpecJS = require('../dist/specjs');
+const SpecJS = require('../dist/specjs')
 
 const ExampleContract = {
-  pre(a) {
+  pre (a) {
     return typeof a === 'number'
   }
 }
 
-function Example(a) {
+function Example (a) {
   return a + 1
 }
 
 const ExampleWithContract = SpecJS.bindSpec(Example, ExampleContract)
 
-r = ExampleWithContract(3)
+const result = ExampleWithContract(3)
 
-r
+console.log('Result', result)
