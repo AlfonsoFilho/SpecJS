@@ -6,3 +6,4 @@ jest.config.js
 .cache/
 src/playground.ts
 tsconfig.json
+.travis.yml
