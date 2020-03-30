@@ -1,18 +1,34 @@
 {
   "name": "specjs",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "Design by contract javascript library",
+  "keywords": [
+    "contract",
+    "offensive",
+    "correctness",
+    "precondition",
+    "postcondition",
+    "invariant",
+    "test",
+    "require",
+    "ensure"
+  ],
   "source": "src/specjs.ts",
   "main": "dist/specjs.js",
   "module": "dist/specjs.esm.js",
   "unpkg": "dist/specjs.umd.js",
+  "browser": "dist/specjs.umd.js",
+  "types": "dist/src/specjs.d.ts",
   "scripts": {
     "test": "standardx --fix && tsc --noEmit && jest --coverage",
     "test:watch": "jest --watch",
     "build": "microbundle -i src/specjs.ts -o dist --name SpecJS"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Alfonso Filho <alfonsocfilho@gmail.com>",
+  "homepage": "https://github.com/AlfonsoFilho/specjs#readme",
+  "bugs": "https://github.com/AlfonsoFilho/specjs/issues",
+  "repository": "github:AlfonsoFilho/specjs",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "25.1.4",
     "@typescript-eslint/eslint-plugin": "2.25.0",
@@ -35,5 +51,6 @@
       "@typescript-eslint/eslint-plugin"
     ]
   },
-  "dependencies": {}
+  "dependencies": {},
+  "runkitExampleFilename": "examples/example.js"
 }
