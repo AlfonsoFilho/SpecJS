@@ -2,11 +2,14 @@
   "name": "specjs",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "source": "src/specjs.ts",
+  "main": "dist/specjs.js",
+  "module": "dist/specjs.esm.js",
+  "unpkg": "dist/specjs.umd.js",
   "scripts": {
     "test": "standardx --fix && tsc --noEmit && jest --coverage",
     "test:watch": "jest --watch",
-    "build": "tsc"
+    "build": "microbundle -i src/specjs.ts -o dist --name SpecJS"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +18,7 @@
     "@typescript-eslint/eslint-plugin": "2.25.0",
     "@typescript-eslint/parser": "2.25.0",
     "jest": "25.2.3",
+    "microbundle": "0.12.0-next.8",
     "standardx": "5.0.0",
     "ts-jest": "25.2.1",
     "typescript": "3.8.3"
