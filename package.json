@@ -1,5 +1,5 @@
 {
-  "name": "specjs",
+  "name": "@alfonsofilho/specjs",
   "version": "0.0.1",
   "description": "Design by contract javascript library",
   "keywords": [
