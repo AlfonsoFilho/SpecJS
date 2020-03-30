@@ -4,7 +4,10 @@ import { Contract, ClassContract, FunctionContract } from './specjs.types'
  * Type guard
  * @param contractType
  */
-function isClass(contractType: FunctionContract | ClassContract): contractType is ClassContract {
+function isClass(contractType: FunctionContract | ClassContract, obj?: any, parent?: any): contractType is ClassContract {
+  if ((!!obj && !!parent) && obj instanceof parent) {
+    return true
+  }
   return (contractType as ClassContract).construct !== undefined
 }
 
@@ -69,13 +72,13 @@ export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
     /**
      * Trap object property change
      */
-    set(target, prop: string, value) {
-      if (isClass(spec)) {
-        if (!(spec?.invariant?.[prop](value, target[prop]) ?? true)) {
+    set(target2, prop: string, value) {
+      if (isClass(spec, target2, target)) {
+        if (!(spec?.invariant?.[prop](value, target2[prop]) ?? true)) {
           throw Error(`Prop ${String(prop)} is invalid`)
         }
       }
-      Reflect.set(target, prop, value)
+      Reflect.set(target2, prop, value)
       return true
     }
   }
