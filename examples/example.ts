@@ -1,5 +1,5 @@
 import { bindSpec } from '../dist/specjs'
-import { Contract, FunctionContract } from '../specjs.types'
+import { FunctionContract } from '../specjs.types'
 
 const ExampleContract: FunctionContract = {
   pre(a: number) {
@@ -13,5 +13,6 @@ function Example(a: number) {
 
 const ExampleWithContract = bindSpec(Example, ExampleContract)
 
-const r = ExampleWithContract(9)
-r //?
+const result = ExampleWithContract(9)
+
+console.log('Result', result)
