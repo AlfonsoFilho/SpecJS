@@ -1,7 +1,7 @@
 /* eslint-env jest */
 
 import { bindSpec, BindClassSpec } from "./specjs"
-import { ClassContract } from "./specjs.types"
+import { ClassContract, FunctionContract } from "./specjs.types"
 
 
 type IToUpper = (str: string) => string
@@ -69,25 +69,33 @@ describe('when postcondition is set', () => {
   })
 })
 
+
+describe('when function throw an exception', () => {
+  it('should catch and run the rescue', () => {
+
+    const rescueFn = jest.fn().mockReturnValue('Error caught')
+    const TestContract: FunctionContract = {
+      rescue: rescueFn
+    }
+
+    function Test() {
+      return JSON.parse('')
+    }
+
+    const TestWithContract = bindSpec(Test, TestContract)
+
+    expect(TestWithContract()).toBe('Error caught')
+    expect(rescueFn).toBeCalled()
+
+  })
+})
+
 describe('when precondition is set to class constructor', () => {
 
   const TestClassContract: ClassContract = {
     construct(int: number) {
       return int > 0
-    },
-
-    // invariant: {
-    //   data(value, old) {
-    //     console.log(value, old)
-    //     // return value !== old
-    //     return value > 0 && value < 10
-    //   }
-    // }
-
-    // rescue(error) {
-    //     console.log('SHit', error)
-    //     return 'DEFAULT'
-    // }
+    }
   }
 
   @BindClassSpec(TestClassContract)
@@ -103,7 +111,7 @@ describe('when precondition is set to class constructor', () => {
     }
   }
 
-  it('should init the class if condition is satisfied', () => {
+  it('should instantiate the class if condition is satisfied', () => {
     const instance = new TestClass(1)
     expect(instance).toBeDefined()
     expect(instance.data).toBe(1)
@@ -116,3 +124,90 @@ describe('when precondition is set to class constructor', () => {
   })
 })
 
+describe('when class contract is empty', () => {
+
+  const TestClassEmptyContract = {}
+
+  @BindClassSpec(TestClassEmptyContract)
+  class TestClass {
+    data: Number
+
+    constructor(val: number) {
+      this.data = val
+    }
+
+    setData(val: number) {
+      this.data = val
+    }
+  }
+
+  class TestNoSpecClass {
+    data: Number
+
+    constructor(val: number) {
+      this.data = val
+    }
+
+    setData(val: number) {
+      this.data = val
+    }
+  }
+
+  it('should return the result', () => {
+    const instance = new TestClass(2)
+    expect(instance.data).toBe(2)
+  })
+
+  it('should update object state', () => {
+    const instance = new TestClass(2)
+    expect(instance.data).toBe(2)
+    instance.setData(0)
+    expect(instance.data).toBe(0)
+  })
+
+  it('should work as a regular class', () => {
+    const instance = new TestClass(2)
+    const instance2 = new TestNoSpecClass(2)
+    expect(instance.data).toBe(instance2.data)
+  })
+
+})
+
+
+describe('when invariant is set', () => {
+  const TestContract: ClassContract = {
+    invariant: {
+      data(value, old) {
+        return value > 1 && value < 5 && value !== old
+      }
+    }
+  }
+
+  @BindClassSpec(TestContract)
+  class TestClass {
+    data: Number
+
+    constructor(val: number) {
+      this.data = val
+    }
+
+    setData(val: number) {
+      this.data = val
+    }
+  }
+
+  it('should update the property', () => {
+    const instance = new TestClass(3)
+    expect(instance.data).toBe(3)
+    instance.data = 2
+    expect(instance.data).toBe(2)
+  })
+
+  it('should throw an error if invariant fails', () => {
+    expect(() => {
+      const instance = new TestClass(3)
+      expect(instance.data).toBe(3)
+      instance.data = 6
+    }).toThrow('Prop data is invalid')
+  })
+})
