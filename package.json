@@ -18,7 +18,7 @@
   "module": "dist/specjs.esm.js",
   "unpkg": "dist/specjs.umd.js",
   "browser": "dist/specjs.umd.js",
-  "types": "dist/src/specjs.d.ts",
+  "types": "dist/specjs.d.ts",
   "scripts": {
     "test": "standardx --fix && tsc --noEmit && jest --coverage",
     "test:watch": "jest --watch",
