@@ -1,0 +1,9 @@
+examples
+src/coverage
+**/*.test.ts
+jest.config.js
+.editorconfig
+.nvmrc
+.cache/
+src/playground.ts
+tsconfig.json
