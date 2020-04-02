@@ -1,4 +1,4 @@
-import { Contract, ClassContract, FunctionContract } from './specjs.types'
+import { Contract, ClassContract, FunctionContract, Target } from './specjs.types'
 
 /**
  * Type guard
@@ -17,36 +17,57 @@ function isClass(contractType: FunctionContract | ClassContract, obj?: any, pare
  */
 export function BindClassSpec(contract: ClassContract) {
   return (target: any) => {
-    return bindSpec<typeof target>(target, contract)
+    return Sign(target, contract)
+  }
+}
+
+const PRE_ERROR = 'Precondition fails'
+const POST_ERROR = 'Postcondition fails'
+
+/**
+ * Execute condition and throw proper error message
+ * @param cond
+ * @param condArgs
+ * @param defaultMsg
+ */
+function runCondition(cond: Function, condArgs: any[], defaultMsg: string): void {
+  if (typeof cond === 'function') {
+    const condResult = cond.apply(null, condArgs);
+    if (condResult !== true) {
+      throw Error(typeof condResult === 'string' ? condResult : defaultMsg)
+    }
   }
 }
 
 /**
  * Creates a new contract
  * @param target
- * @param spec
+ * @param contract
  */
-export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
+export function Sign(target: Target, contract: any) {
   const handler: ProxyHandler<any> = {
 
     /**
      * Trap function calls
      */
-    apply(cb: T, _this, args) {
+    apply(cb: any, thisArg, args) {
+
+      const { pre, post, rescue } = contract(...args)
+
       let result: unknown
+
       try {
-        if (!(spec?.pre?.apply?.(null, args) ?? true)) {
-          throw Error('Precondition fails')
-        }
+        // Precondition
+        runCondition(pre, args, PRE_ERROR)
 
-        result = cb.apply(_this, args)
+        result = cb.apply(thisArg, args)
 
-        if (!(spec?.post?.(result) ?? true)) {
-          throw Error('Postcondition fails')
-        }
+        // Postcondition
+        runCondition(post, [result], POST_ERROR)
       } catch (error) {
-        if (typeof spec.rescue === 'function') {
-          result = spec.rescue(error)
+        console.log('err', error)
+        if (typeof rescue === 'function') {
+          result = rescue(error)
         } else {
           throw error
         }
@@ -59,8 +80,8 @@ export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
      * Trap classes initialization
      */
     construct(Target, args) {
-      if (isClass(spec)) {
-        if (!(spec?.construct?.apply(null, args) ?? true)) {
+      if (isClass(contract)) {
+        if (!(contract?.construct?.apply(null, args) ?? true)) {
           throw Error('Precondition on constructor fails')
         }
       }
@@ -73,8 +94,8 @@ export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
      * Trap object property change
      */
     set(target2, prop: string, value) {
-      if (isClass(spec, target2, target)) {
-        if (!(spec?.invariant?.[prop](value, target2[prop]) ?? true)) {
+      if (isClass(contract, target2, target)) {
+        if (!(contract?.invariant?.[prop](value, target2[prop]) ?? true)) {
           throw Error(`Prop ${String(prop)} is invalid`)
         }
       }
@@ -82,5 +103,36 @@ export function bindSpec<T extends Function>(target: T, spec: Contract<T>) {
       return true
     }
   }
-  return new Proxy<T>(target, handler)
+  return new Proxy<any>(target, handler)
+}
+
+
+export const check = (fn: Function, errorMsg?: string): [Function, string | undefined] => [fn, errorMsg]
+
+export const isRequired = (...args: any[]): [Function, string | undefined] => [() => {
+  for (const value of args) {
+    if (value === undefined || value === null) {
+      return false
+    }
+  }
+
+  return true
+}, 'is required']
+
+export const isRange = (value: number, min: number, max: number): [Function, string | undefined] => [
+  () => value >= min && value <= max, 'not in range'
+]
+
+export const conditions = (...conds: Array<[Function, string | undefined]>) => (...args: any[]) => {
+  let result: string | boolean | undefined = true
+  console.log('?', conds)
+  for (const [cond, errorMsg] of conds) {
+    let temp = cond(...args)
+    if (!temp) {
+      result = errorMsg;
+      break
+    }
+  }
+
+  return result
 }
