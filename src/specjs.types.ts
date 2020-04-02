@@ -1,8 +1,16 @@
-export interface FunctionContract {
-  pre?: (...args: any[]) => Boolean,
-  post?: (result: any) => Boolean,
+// export interface FunctionContract {
+//   pre?: (...args: any[]) => Boolean,
+//   post?: (result: any) => Boolean,
+//   rescue?: (error: Error) => unknown
+// }
+
+
+
+export type FunctionContract = () => {
+  pre?: () => Boolean
+  post?: (result: any) => Boolean
   rescue?: (error: Error) => unknown
-}
+} | {}
 
 export type Target = Function
 
@@ -14,4 +22,4 @@ export interface ClassContract {
   };
 }
 
-export type Contract<T> = T extends Function ? FunctionContract : ClassContract
+export type Contract = FunctionContract | ClassContract
