@@ -5,6 +5,7 @@
 [![Build Status](https://travis-ci.com/AlfonsoFilho/specjs.svg?branch=master)](https://travis-ci.com/AlfonsoFilho/specjs)
 [![npm version](https://badge.fury.io/js/%40alfonsofilho%2Fspecjs.svg)](https://badge.fury.io/js/%40alfonsofilho%2Fspecjs)
 [![Try match-toy on RunKit](https://badge.runkitcdn.com/%40alfonsofilho%2Fspecjs.svg)](https://npm.runkit.com/%40alfonsofilho%2Fspecjs)
+[![codecov](https://codecov.io/gh/AlfonsoFilho/SpecJS/branch/master/graph/badge.svg)](https://codecov.io/gh/AlfonsoFilho/SpecJS)
 
 > **THIS LIBRARY STILL IN EARLY DEVELOPMENT, IT'S NOT STABLE, AND USAGE IN PRODUCTION IS NOT RECOMMENDED YET.**
 
