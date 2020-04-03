@@ -1,21 +1,21 @@
 import { Contract, ClassContract, FunctionContract, Target } from './specjs.types'
 
 /**
- * Type guard
- * @param contractType
- */
-function isClass(contractType: FunctionContract | ClassContract, obj?: any, parent?: any): contractType is ClassContract {
-  if ((!!obj && !!parent) && obj instanceof parent) {
-    return true
-  }
-  return (contractType as ClassContract).construct !== undefined
-}
+//  * Type guard
+//  * @param contractType
+//  */
+// function isClass(contractType: FunctionContract | ClassContract, obj?: any, parent?: any): contractType is ClassContract {
+//   if ((!!obj && !!parent) && obj instanceof parent) {
+//     return true
+//   }
+//   return (contractType as ClassContract).construct !== undefined
+// }
 
 /**
  * Class Decorator
  * @param contract
  */
-export function BindClassSpec(contract: ClassContract) {
+export function SignClass(contract: ClassContract) {
   return (target: any) => {
     return Sign(target, contract)
   }
@@ -23,6 +23,13 @@ export function BindClassSpec(contract: ClassContract) {
 
 const PRE_ERROR = 'Precondition fails'
 const POST_ERROR = 'Postcondition fails'
+const PRE_CLASS_ERROR = 'Precondition of constructor fails'
+const POST_CLASS_ERROR = 'Postcondition of constructor fails'
+const PRE_METHOD_ERROR = 'Precondition of method fails'
+const POST_METHOD_ERROR = 'Postcondition of method fails'
+
+
+const INVARIANT = Symbol()
 
 /**
  * Execute condition and throw proper error message
@@ -45,13 +52,26 @@ function runCondition(cond: Function, condArgs: any[], defaultMsg: string): void
  * @param contract
  */
 export function Sign(target: Target, contract: any) {
+
+  const invariants: { [key: string]: [Function, string | undefined] } = {}
+
+  for (const key in contract) {
+    let val = contract[key][INVARIANT];
+    if (val) {
+      invariants[key] = val
+    }
+  }
+
+  console.log('invariant', invariants)
+
+
   const handler: ProxyHandler<any> = {
 
     /**
      * Trap function calls
      */
     apply(cb: any, thisArg, args) {
-
+      console.log('apply?')
       const { pre, post, rescue } = contract(...args)
 
       let result: unknown
@@ -65,7 +85,7 @@ export function Sign(target: Target, contract: any) {
         // Postcondition
         runCondition(post, [result], POST_ERROR)
       } catch (error) {
-        console.log('err', error)
+
         if (typeof rescue === 'function') {
           result = rescue(error)
         } else {
@@ -80,26 +100,57 @@ export function Sign(target: Target, contract: any) {
      * Trap classes initialization
      */
     construct(Target, args) {
-      if (isClass(contract)) {
-        if (!(contract?.construct?.apply(null, args) ?? true)) {
-          throw Error('Precondition on constructor fails')
-        }
-      }
+
+      const { pre, post } = contract?.constructor(...args)
+
+      runCondition(pre, args, PRE_CLASS_ERROR)
 
       const instance = new Target(...args)
+
+      runCondition(post, [instance], POST_CLASS_ERROR)
+      console.log(Object.getOwnPropertyNames(instance))
+      console.log(instance.prototype)
       return new Proxy(instance, handler)
+    },
+
+    /**
+     * Trap methods
+     * @param target
+     * @param prop
+     * @param receiver
+     */
+    get(target, prop, receiver) {
+      const targetValue = Reflect.get(target, prop, receiver);
+
+      if (typeof targetValue === 'function') {
+        return function (...args: any[]) {
+          const { pre, post } = contract?.[prop](...args)
+
+          let result
+
+          runCondition(pre, args, PRE_METHOD_ERROR)
+
+          result = targetValue.apply(target, args); // (A)
+
+          runCondition(post, [result], POST_METHOD_ERROR)
+
+          return result
+        }
+      } else {
+        return targetValue;
+      }
     },
 
     /**
      * Trap object property change
      */
-    set(target2, prop: string, value) {
-      if (isClass(contract, target2, target)) {
-        if (!(contract?.invariant?.[prop](value, target2[prop]) ?? true)) {
-          throw Error(`Prop ${String(prop)} is invalid`)
-        }
+    set(target, prop: string, value) {
+      console.log('prop', prop)
+      if (!invariants[prop][0](value, target[prop])) {
+        const msg = invariants[prop][1] || `Prop ${String(prop)} is invalid`
+        throw Error(msg)
       }
-      Reflect.set(target2, prop, value)
+      Reflect.set(target, prop, value)
       return true
     }
   }
@@ -136,3 +187,5 @@ export const conditions = (...conds: Array<[Function, string | undefined]>) => (
 
   return result
 }
+
+export const invariant = (fn: Function, errorMsg: string) => ({ [INVARIANT]: [fn, errorMsg] })
