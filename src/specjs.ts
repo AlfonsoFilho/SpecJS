@@ -1,15 +1,5 @@
 import { Contract, ClassContract, FunctionContract, Target } from './specjs.types'
-
-/**
-//  * Type guard
-//  * @param contractType
-//  */
-// function isClass(contractType: FunctionContract | ClassContract, obj?: any, parent?: any): contractType is ClassContract {
-//   if ((!!obj && !!parent) && obj instanceof parent) {
-//     return true
-//   }
-//   return (contractType as ClassContract).construct !== undefined
-// }
+import { INVARIANT, PRE_ERROR, POST_ERROR, PRE_CLASS_ERROR, POST_CLASS_ERROR, PRE_METHOD_ERROR, POST_METHOD_ERROR, CONTRACT_UNDEFINED_ERROR, UNDEFINED, IS_REQUIRED_ERROR, IS_RANGE_ERROR } from './constants';
 
 /**
  * Class Decorator
@@ -20,16 +10,6 @@ export function SignClass(contract: ClassContract) {
     return Sign(target, contract)
   }
 }
-
-const PRE_ERROR = 'Precondition fails'
-const POST_ERROR = 'Postcondition fails'
-const PRE_CLASS_ERROR = 'Precondition of constructor fails'
-const POST_CLASS_ERROR = 'Postcondition of constructor fails'
-const PRE_METHOD_ERROR = 'Precondition of method fails'
-const POST_METHOD_ERROR = 'Postcondition of method fails'
-
-
-const INVARIANT = Symbol()
 
 /**
  * Execute condition and throw proper error message
@@ -47,11 +27,15 @@ function runCondition(cond: Function, condArgs: any[], defaultMsg: string): void
 }
 
 /**
- * Creates a new contract
+ * Bind a contract with a function, class or object.
  * @param target
  * @param contract
  */
 export function Sign(target: Target, contract: any) {
+
+  if (contract === UNDEFINED || contract === null) {
+    throw new Error(CONTRACT_UNDEFINED_ERROR)
+  }
 
   const invariants: { [key: string]: [Function, string | undefined] } = {}
 
@@ -62,17 +46,14 @@ export function Sign(target: Target, contract: any) {
     }
   }
 
-  console.log('invariant', invariants)
-
-
   const handler: ProxyHandler<any> = {
 
     /**
      * Trap function calls
      */
     apply(cb: any, thisArg, args) {
-      console.log('apply?')
-      const { pre, post, rescue } = contract(...args)
+
+      const { pre, post, rescue } = contract(...args) ?? {}
 
       let result: unknown
 
@@ -101,15 +82,16 @@ export function Sign(target: Target, contract: any) {
      */
     construct(Target, args) {
 
-      const { pre, post } = contract?.constructor(...args)
+      const { pre, post } = contract?.constructor(...args) ?? {}
 
+      // Precondition
       runCondition(pre, args, PRE_CLASS_ERROR)
 
       const instance = new Target(...args)
 
+      // Postcondition
       runCondition(post, [instance], POST_CLASS_ERROR)
-      console.log(Object.getOwnPropertyNames(instance))
-      console.log(instance.prototype)
+
       return new Proxy(instance, handler)
     },
 
@@ -123,16 +105,18 @@ export function Sign(target: Target, contract: any) {
       const targetValue = Reflect.get(target, prop, receiver);
 
       if (typeof targetValue === 'function') {
-        return function (...args: any[]) {
-          const { pre, post } = contract?.[prop](...args)
+        return function (this: any, ...args: any[]) {
+          const { pre, post } = contract[prop]?.(...args) ?? {}
 
           let result
 
-          runCondition(pre, args, PRE_METHOD_ERROR)
+          // Precondition
+          runCondition(pre, [target], PRE_METHOD_ERROR)
 
-          result = targetValue.apply(target, args); // (A)
+          result = targetValue.apply(target, args);
 
-          runCondition(post, [result], POST_METHOD_ERROR)
+          // Postcondition
+          runCondition(post, [result, target], POST_METHOD_ERROR)
 
           return result
         }
@@ -145,9 +129,10 @@ export function Sign(target: Target, contract: any) {
      * Trap object property change
      */
     set(target, prop: string, value) {
-      console.log('prop', prop)
-      if (!invariants[prop][0](value, target[prop])) {
-        const msg = invariants[prop][1] || `Prop ${String(prop)} is invalid`
+
+      if (!invariants[prop]?.[0](value, target[prop])) {
+        const msg = invariants[prop]?.[1] || `Prop ${String(prop)} is invalid`
+        // const msg = invariants?.[prop]?.[1] ?? `Prop ${String(prop)} is invalid`
         throw Error(msg)
       }
       Reflect.set(target, prop, value)
@@ -157,26 +142,13 @@ export function Sign(target: Target, contract: any) {
   return new Proxy<any>(target, handler)
 }
 
-
-export const check = (fn: Function, errorMsg?: string): [Function, string | undefined] => [fn, errorMsg]
-
-export const isRequired = (...args: any[]): [Function, string | undefined] => [() => {
-  for (const value of args) {
-    if (value === undefined || value === null) {
-      return false
-    }
-  }
-
-  return true
-}, 'is required']
-
-export const isRange = (value: number, min: number, max: number): [Function, string | undefined] => [
-  () => value >= min && value <= max, 'not in range'
-]
-
+/**
+ * Compose conditions
+ * @param conds
+ */
 export const conditions = (...conds: Array<[Function, string | undefined]>) => (...args: any[]) => {
   let result: string | boolean | undefined = true
-  console.log('?', conds)
+
   for (const [cond, errorMsg] of conds) {
     let temp = cond(...args)
     if (!temp) {
@@ -188,4 +160,42 @@ export const conditions = (...conds: Array<[Function, string | undefined]>) => (
   return result
 }
 
-export const invariant = (fn: Function, errorMsg: string) => ({ [INVARIANT]: [fn, errorMsg] })
+/**
+ * Set a invariant for a field
+ * @param fn
+ * @param errorMsg
+ */
+export const invariant = (fn: Function, errorMsg?: string) => ({ [INVARIANT]: [fn, errorMsg] })
+
+/**
+ * Take a regular function as condition
+ * @param fn
+ * @param errorMsg
+ */
+export const check = (fn: Function, errorMsg?: string): [Function, string | undefined] => [fn, errorMsg]
+
+/**
+ * Check if fields are defined
+ * @param args
+ */
+export const isRequired = (...args: any[]): [Function, string | undefined] => [() => {
+  for (const value of args) {
+    if (value === undefined || value === null) {
+      return false
+    }
+  }
+
+  return true
+}, IS_REQUIRED_ERROR]
+
+/**
+ * Check if value is within a range
+ * @param value
+ * @param min
+ * @param max
+ */
+export const isRange = (value: number, min: number, max: number): [Function, string | undefined] => [
+  () => value >= min && value <= max
+  , IS_RANGE_ERROR
+]
+
