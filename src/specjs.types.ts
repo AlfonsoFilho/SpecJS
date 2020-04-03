@@ -1,16 +1,8 @@
-// export interface FunctionContract {
-//   pre?: (...args: any[]) => Boolean,
-//   post?: (result: any) => Boolean,
-//   rescue?: (error: Error) => unknown
-// }
-
-
-
-export type FunctionContract = () => {
+export type FunctionContract = () => ({
   pre?: () => Boolean
   post?: (result: any) => Boolean
   rescue?: (error: Error) => unknown
-} | {}
+}) | {}
 
 export type Target = Function
 
