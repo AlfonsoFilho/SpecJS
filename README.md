@@ -43,8 +43,34 @@ See more in [examples](./examples).
 
 ## Usage
 Most basic usage:
-```javascript
-// TBD
+```typescript
+import { Sign, conditions, isRequired, check } from '@alfonsofilho/specjs';
+
+// 1. Write the Contract
+const toUpperContract = (text: string) => ({
+  pre: conditions(
+    isRequired(text),
+    check(() => text.length > 0)
+  ),
+  post: conditions(
+    check((result: string) => result === text.toUpperCase())
+  )
+})
+
+// 2. Write the function or class
+function toUpper(text: string): string {
+  return text.toUppercase(text)
+}
+
+// 3. Bind the implementation and the contract
+const toUpperSigned = Sign(toUpper, toUpperContract)
+
+// 4. Use the signed function with the runtime
+//    guarantees provided by the contract
+toUpperSigned('test') === 'TEST' // OK
+toUpperSigner('') === 'TEST' // Precondition fails
+
+
 ```
 
 ### Built with
