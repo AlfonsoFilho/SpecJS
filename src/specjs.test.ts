@@ -1,7 +1,7 @@
 /* eslint-env jest */
 
-import { Sign, SignClass, conditions, check, invariant, isRange, isRequired } from "./specjs"
-import { CONTRACT_UNDEFINED_ERROR, PRE_CLASS_ERROR, POST_CLASS_ERROR, PRE_METHOD_ERROR, POST_METHOD_ERROR, PRE_ERROR, IS_REQUIRED_ERROR, IS_RANGE_ERROR } from "./constants"
+import { Sign, SignClass, conditions, check, invariant, inRange, isRequired } from "./specjs"
+import { CONTRACT_UNDEFINED_ERROR, PRE_CLASS_ERROR, POST_CLASS_ERROR, PRE_METHOD_ERROR, POST_METHOD_ERROR, PRE_ERROR, IS_REQUIRED_ERROR, IN_RANGE_ERROR } from "./constants"
 
 
 function Slice(str: string, start: number, end: number) {
@@ -377,7 +377,7 @@ describe('when using isRequired', () => {
 describe('when using isRange', () => {
 
   const Contract = (str: string, start: number, end: number) => ({
-    pre: conditions(isRange(start, 1, 3))
+    pre: conditions(inRange(start, 1, 3))
   })
   const Test = Sign(Slice, Contract)
 
@@ -389,18 +389,13 @@ describe('when using isRange', () => {
   it('should throw an error if is less than min', () => {
     expect(() => {
       const r = Test('test', 0, 3)
-    }).toThrow(IS_RANGE_ERROR)
+    }).toThrow(IN_RANGE_ERROR)
   })
 
   it('should throw an error if is more than max', () => {
     expect(() => {
       Test('test', 4, 3)
-    }).toThrow(IS_RANGE_ERROR)
+    }).toThrow(IN_RANGE_ERROR)
   })
 })
-
-
-// Helpers
-// Object
-// React
 

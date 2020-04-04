@@ -1,5 +1,5 @@
 import { Contract, ClassContract, FunctionContract, Target } from './specjs.types'
-import { INVARIANT, PRE_ERROR, POST_ERROR, PRE_CLASS_ERROR, POST_CLASS_ERROR, PRE_METHOD_ERROR, POST_METHOD_ERROR, CONTRACT_UNDEFINED_ERROR, UNDEFINED, IS_REQUIRED_ERROR, IS_RANGE_ERROR } from './constants';
+import { INVARIANT, PRE_ERROR, POST_ERROR, PRE_CLASS_ERROR, POST_CLASS_ERROR, PRE_METHOD_ERROR, POST_METHOD_ERROR, CONTRACT_UNDEFINED_ERROR, UNDEFINED, IS_REQUIRED_ERROR, IN_RANGE_ERROR } from './constants';
 
 /**
  * Class Decorator
@@ -194,8 +194,8 @@ export const isRequired = (...args: any[]): [Function, string | undefined] => [(
  * @param min
  * @param max
  */
-export const isRange = (value: number, min: number, max: number): [Function, string | undefined] => [
+export const inRange = (value: number, min: number, max: number): [Function, string | undefined] => [
   () => value >= min && value <= max
-  , IS_RANGE_ERROR
+  , IN_RANGE_ERROR
 ]
 

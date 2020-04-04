@@ -7,7 +7,7 @@ export const PRE_METHOD_ERROR = 'Precondition of method fails'
 export const POST_METHOD_ERROR = 'Postcondition of method fails'
 
 export const IS_REQUIRED_ERROR = 'is required'
-export const IS_RANGE_ERROR = 'not in range'
+export const IN_RANGE_ERROR = 'not in range'
 
 export const INVARIANT = Symbol()
 
