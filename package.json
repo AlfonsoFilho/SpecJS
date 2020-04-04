@@ -1,6 +1,6 @@
 {
   "name": "@alfonsofilho/specjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Design by contract javascript library",
   "keywords": [
     "contract",
@@ -25,7 +25,7 @@
     "build": "microbundle -i src/specjs.ts -o dist --name SpecJS"
   },
   "author": "Alfonso Filho <alfonsocfilho@gmail.com>",
-  "homepage": "https://github.com/AlfonsoFilho/specjs#readme",
+  "homepage": "https://alfonsofilho.github.io/SpecJS",
   "bugs": "https://github.com/AlfonsoFilho/specjs/issues",
   "repository": "github:AlfonsoFilho/specjs",
   "license": "MIT",
